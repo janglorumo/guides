@@ -58,7 +58,6 @@ $ sudo certbot renew --dry-run
 ```
 
 
-Setting up a reverse proxy with https 
 
 ### Update Docker so it runs like this
 
