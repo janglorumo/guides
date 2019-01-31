@@ -36,8 +36,12 @@ There are a few required pieces to get this working. They are:
 
 * Confirm that Docker is installed correctly.
   ```
-  $ docker --version
+  $ sudo docker --version
   Docker version 18.09.0, build 4d60db4
+  ```
+* If you're willing to take the security risk as [outlined here](https://docs.docker.com/engine/security/security/#docker-daemon-attack-surface) you can execute `docker` commands without the `sudo` prefix, alternatively include `sudo` before all docker commands that follow in this guide.
+  ```
+  $ sudo usermod -aG docker $USER
   ```
 
 * Restart your RaspiBolt for the changes to take effect and connect as user "admin".
@@ -47,26 +51,25 @@ There are a few required pieces to get this working. They are:
 
 * Now test Docker by running the "Hello world" image. As it is not yet locally available, Docker automatically retrieves it from the [Docker Hub](https://hub.docker.com/), starts it up and executes the container. You might need to use "sudo" if you skipped the "usermod" step above.
   ```
-    $ sudo docker run hello-world
+    $ docker run hello-world
   ```
-  ![Output of Docker hello-world container](images/71_Docker_hello-world.png)
 
 ## InfluxDB
 [InfluxDB](https://www.influxdata.com/) is an open-source time series database (TSDB) developed by InfluxData. It is written in Go and optimized for fast, high-availability storage and retrieval of time series data in fields such as operations monitoring, application metrics, Internet of Things sensor data, and real-time analytics. (source: [Wikipedia](https://en.wikipedia.org/wiki/InfluxDB)) 
 
 * Start the InfluxDB Docker image with auto-restart in the event of a system restart.
   ```
-  $ sudo docker run -d --name=influxdb --net=host --restart always --volume=/var/influxdb:/data hypriot/rpi-influxdb 
+  $ docker run -d --name=influxdb --net=host --restart always --volume=/var/influxdb:/data hypriot/rpi-influxdb 
   ```
 
-* Add a retention policy so we don't have to worry about the InfluxDb growing in size
+* Add a retention policy so we don't have to worry about the InfluxDB growing in size
   ```
-  $ sudo docker ps
+  $ docker ps
   CONTAINER ID        IMAGE                       COMMAND                  CREATED             STATUS              PORTS               NAMES
   b9f31d893601        hypriot/rpi-influxdb        "/usr/bin/entry.sh /…"   5 minutes ago       Up 5 minutes                              influxdb
   ```
 
-* Use the influxdb `CONTAINER ID`, in the example above it's `b9f31d893601`, to open the Influx commandline interface. Enter the commands on lines with `>` directly into the CLI, without the `>`. 
+* Use the InfluxDB `CONTAINER ID`, in the example above it's `b9f31d893601`, to open the Influx commandline interface. Enter the commands on lines with `>` directly into the CLI, without the `>`. 
   ```
   $ docker exec -it b9f31d893601 /usr/bin/influx
   > CREATE DATABASE telegraf
@@ -98,7 +101,7 @@ There are a few required pieces to get this working. They are:
   $ sudo systemctl status telegraf
   ```
 
-* Configure Telegraf by downloading this custom [`telegraf.conf`](https://raw.githubusercontent.com/Stadicus/guides/master/raspibolt/resources/telegraf.conf) so that it publishes the data we can use later in the Grafana dashboard.
+* Configure Telegraf by downloading this custom [`telegraf.conf`](https://raw.githubusercontent.com/badokun/guides/master/raspibolt/resources/telegraf.conf) so that it publishes the data we can use later in the Grafana dashboard.
 
   ```
   $ cd /etc/telegraf/
@@ -123,19 +126,19 @@ There are a few required pieces to get this working. They are:
 * Run the Grafana's docker image, replacing the `admin` password setting `PASSWORD_[E]` with your password. This will be used when logging into Grafana's UI. Copy / paste all lines at once into your terminal.
 
   ```
-  $ sudo docker run \
+  $ docker run \
     -d \
     -e "GF_SECURITY_ADMIN_PASSWORD=PASSWORD_[E]" \
     --name grafana \
     -v grafana-storage:/var/lib/grafana \
-    --restart always \d
+    --restart always \
     --net=host \
     grafana/grafana:5.4.3
   ```
 
 * Confirm Grafana is running as a docker container. 
   ```
-  $ sudo docker ps
+  $ docker ps
   ```
   ```
   CONTAINER ID        IMAGE                    COMMAND                  CREATED              STATUS              PORTS               NAMES
@@ -146,10 +149,10 @@ There are a few required pieces to get this working. They are:
 * To access the analytics webpage, we need to modify the firewall configuration to allow incomming connections to port 3000. 
 > Note the IP address range, yours may be 192.168.1.0/24 or different (see [base guide](raspibolt_20_pi.md#enabling-the-uncomplicated-firewall) for further information).
   ```
-  $ sudo ufw allow from 192.168.0.0/24 to any port 3000 comment 'allow grafana from local LAN'
+  $ sudo ufw allow from 192.168.1.0/24 to any port 3000 comment 'allow grafana from local LAN'
   ```
 
-At this point the basic setup is complete and we can start to setup a Grafana Dashboard. Browse to `http://192.168.0.20:3000` in your browser (use the IP address of your RaspiBolt) and log in with `admin` and `PASSWORD_[E]`. 
+At this point the basic setup is complete and we can start to setup a Grafana Dashboard. Browse to `http://192.168.1.40:3000` in your browser (use the IP address of your RaspiBolt) and log in with `admin` and `PASSWORD_[E]`. 
 
 ![Grafana Home](images/71_grafana-home.jpg)
 
