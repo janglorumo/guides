@@ -106,6 +106,7 @@ bitcoin.mainnet=1
 ## Restart bitcoind & lnd for mainnet
 
 :warning: **Do not proceed** until the copy task of the mainnet blockchain is completely finished.
+:warning: Please make sure port 8332 is closed, this is sensitive and allows everybody to remotely control your bitcoind.
 
 * Start Bitcoind and check if it's operating on mainnet  (you can exit the debug.log with `Ctrl-C`)
 
